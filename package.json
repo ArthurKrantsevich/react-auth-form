@@ -1,0 +1,23 @@
+{
+  "name": "react-auth-form",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5190 --strictPort",
+    "build": "tsc -b && vite build"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "typescript": "5.7",
+    "vite": "^6.4.5"
+  },
+  "description": "Форма входа и регистрации на React и чистом CSS без библиотек анимации",
+  "license": "MIT"
+}

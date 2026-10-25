@@ -1,0 +1,509 @@
+/* Форма входа и регистрации: вся анимация — на CSS-переходах, без библиотек. */
+.auth {
+  --accent: #c8623e;
+  --ink: #16161a;
+  --muted: #86807a;
+  --line: #e6e1da;
+  --field: #faf8f5;
+  --err: #e5484d;
+  --ok: #2fa35a;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 440px;
+  padding: 30px 30px 32px;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 30px 70px -20px rgba(60, 35, 20, 0.28);
+  font-family: "Manrope", system-ui, sans-serif;
+  color: var(--ink);
+}
+
+/* ── раскрытие блока до настоящей высоты ── */
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+  transition: grid-template-rows 0.5s var(--ease), opacity 0.2s ease, transform 0.5s var(--ease);
+}
+.collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: none;
+  transition-delay: var(--delay, 0ms);
+}
+.collapse-inner {
+  overflow: hidden;
+  min-height: 0;
+  /* запас, чтобы кольцо фокуса не обрезалось */
+  padding: 5px;
+  margin: -5px;
+}
+/* когда блок раскрылся, перестаём обрезать — иначе срезаются тени */
+.collapse[data-open="true"] > .collapse-inner {
+  animation: unclip 0s calc(var(--delay, 0ms) + 0.5s) forwards;
+}
+@keyframes unclip {
+  to { overflow: visible; }
+}
+
+/* ── переключатель ── */
+.tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 5px;
+  background: #f2efeb;
+  border-radius: 16px;
+  margin-bottom: 26px;
+}
+.tabs-pill {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 18px -8px rgba(60, 35, 20, 0.35);
+  transition: transform 0.55s var(--spring);
+}
+.tabs[data-mode="register"] .tabs-pill {
+  transform: translateX(100%);
+}
+.tabs button {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 12px 0;
+  border-radius: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.tabs button[aria-selected="true"] {
+  color: var(--ink);
+}
+
+/* ── заголовок: два h1 в одной точке, один уходит в размытие ── */
+.auth-head {
+  position: relative;
+  height: 40px;
+}
+.auth-head h1 {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  transition: opacity 0.35s var(--ease), transform 0.5s var(--ease), filter 0.35s;
+}
+.auth-head h1.out {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(6px);
+  pointer-events: none;
+}
+.auth-sub {
+  margin: 6px 0 22px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ── поле ── */
+.field {
+  margin-bottom: 12px;
+}
+.field-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--field);
+  border: 1.5px solid var(--line);
+  transition: border-color 0.25s, box-shadow 0.35s var(--ease), background 0.25s;
+}
+.field-box:hover {
+  border-color: #d6cfc6;
+}
+.field-box:focus-within {
+  background: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(200, 98, 62, 0.14);
+}
+.field[data-state="valid"] .field-box {
+  border-color: rgba(47, 163, 90, 0.55);
+}
+.field[data-state="error"] .field-box {
+  border-color: var(--err);
+  background: #fff8f8;
+}
+.field[data-state="error"] .field-box:focus-within {
+  box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.14);
+}
+.field-icon {
+  width: 52px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  color: var(--muted);
+  transition: color 0.25s, transform 0.4s var(--spring);
+}
+.field-box:focus-within .field-icon {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+.field[data-state="error"] .field-icon {
+  color: var(--err);
+}
+.field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: none;
+  outline: none;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 18px 6px 0 0;
+}
+/* плавающая метка: стоит в поле, при фокусе или тексте уезжает вверх и уменьшается */
+.field label {
+  position: absolute;
+  left: 52px;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
+  pointer-events: none;
+  transition: transform 0.35s var(--ease), color 0.25s;
+}
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  transform: translateY(calc(-50% - 11px)) scale(0.76);
+}
+.field input:focus + label {
+  color: var(--accent);
+}
+.field[data-state="error"] label {
+  color: var(--err);
+}
+.field-ok {
+  width: 30px;
+  flex-shrink: 0;
+  display: flex;
+  color: var(--ok);
+}
+.field-ok .check {
+  animation: pop 0.45s var(--spring);
+}
+.field-eye {
+  flex-shrink: 0;
+  width: 48px;
+  height: 100%;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 14px 14px 0;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.field-eye:hover {
+  color: var(--ink);
+}
+/* сообщение об ошибке выезжает тем же приёмом, что и Collapse */
+.field-msg {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s var(--ease);
+}
+.field-msg > span {
+  overflow: hidden;
+  min-height: 0;
+  padding-left: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--err);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.25s, transform 0.3s var(--ease);
+}
+.field[data-state="error"] .field-msg {
+  grid-template-rows: 1fr;
+}
+.field[data-state="error"] .field-msg > span {
+  opacity: 1;
+  transform: none;
+  padding-top: 6px;
+}
+
+/* тряска: два одинаковых keyframes, чтобы перезапускать анимацию сменой класса */
+.shake-0 {
+  animation: shakeA 0.45s var(--ease);
+}
+.shake-1 {
+  animation: shakeB 0.45s var(--ease);
+}
+@keyframes shakeA {
+  15%, 55% { translate: -7px; }
+  35%, 75% { translate: 7px; }
+  90% { translate: -2px; }
+}
+@keyframes shakeB {
+  15%, 55% { translate: -7px; }
+  35%, 75% { translate: 7px; }
+  90% { translate: -2px; }
+}
+
+/* ── галочка рисуется ── */
+.check path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.45s var(--ease) 0.05s forwards;
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pop {
+  from { transform: scale(0.4); opacity: 0; }
+}
+
+/* ── сила пароля ── */
+.meter {
+  padding: 2px 2px 16px;
+}
+.meter[data-score="1"] { --c: var(--err); }
+.meter[data-score="2"] { --c: #f0a030; }
+.meter[data-score="3"] { --c: #7cb342; }
+.meter[data-score="4"] { --c: var(--ok); }
+.meter-bars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.meter-bars span {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: #ece7e1;
+  overflow: hidden;
+}
+.meter-bars span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--c, var(--err));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--ease), background 0.3s;
+}
+.meter-bars span.on::after {
+  transform: scaleX(1);
+}
+.meter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.meter-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.meter-rules li {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f4f1ed;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: background 0.3s, color 0.3s;
+}
+.meter-rules li .check {
+  display: none;
+}
+.meter-rules li.ok {
+  background: rgba(47, 163, 90, 0.12);
+  color: var(--ok);
+}
+.meter-rules li.ok .check {
+  display: block;
+}
+.meter-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c, var(--muted));
+  transition: color 0.3s;
+}
+
+.auth-forgot {
+  display: block;
+  text-align: right;
+  margin: -2px 4px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* ── кнопка: текст → круг со спиннером → зелёная «Готово» ── */
+.submit {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 58px;
+  margin: 10px auto 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--ink);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 12px 26px -12px rgba(22, 22, 26, 0.7);
+  transition: width 0.55s var(--ease), border-radius 0.55s var(--ease), background 0.4s, transform 0.2s;
+}
+.submit:hover {
+  transform: translateY(-1px);
+}
+.submit:active {
+  transform: scale(0.98);
+}
+.submit[data-status="loading"] {
+  width: 58px;
+  border-radius: 29px;
+  background: var(--accent);
+}
+.submit[data-status="success"] {
+  background: var(--ok);
+}
+.submit > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: opacity 0.25s, transform 0.4s var(--ease);
+}
+.submit-label svg {
+  transition: transform 0.3s var(--ease);
+}
+.submit:hover .submit-label svg {
+  transform: translateX(4px);
+}
+.submit-spin,
+.submit-done {
+  opacity: 0;
+  transform: scale(0.6);
+}
+.submit[data-status="loading"] .submit-label {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+.submit[data-status="loading"] .submit-spin,
+.submit[data-status="success"] .submit-done {
+  opacity: 1;
+  transform: none;
+}
+.submit[data-status="success"] .submit-label {
+  opacity: 0;
+}
+.submit-done .check path {
+  animation: none;
+}
+.submit[data-status="success"] .submit-done .check path {
+  animation: draw 0.45s var(--ease) 0.2s forwards;
+}
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── экран успеха ── */
+.auth-done {
+  text-align: center;
+  padding: 22px 8px 6px;
+}
+.auth-done-badge {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: rgba(47, 163, 90, 0.12);
+  color: var(--ok);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(0.5);
+  transition: transform 0.7s var(--spring) 0.3s;
+}
+.auth[data-done="true"] .auth-done-badge {
+  transform: scale(1);
+}
+.auth-done .check path {
+  animation: none;
+}
+.auth[data-done="true"] .auth-done .check path {
+  animation: draw 0.6s var(--ease) 0.55s forwards;
+}
+.auth-done h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.auth-done p {
+  margin: 0 0 22px;
+  color: var(--muted);
+}
+.auth-back {
+  padding: 12px 22px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.auth button:focus-visible,
+.auth a:focus-visible {
+  outline: 3px solid rgba(200, 98, 62, 0.45);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth *,
+  .auth *::before,
+  .auth *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
